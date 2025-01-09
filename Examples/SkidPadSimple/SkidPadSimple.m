@@ -7,7 +7,7 @@
 %% Code start
 %
 
-clear ; close all ; clc
+clear ; close all ; clc;
 
 import VehicleDynamicsLateral.*
 
@@ -17,11 +17,6 @@ import VehicleDynamicsLateral.*
 T       = 10;                 % Total simulation time [s]
 resol   = 100;                % Resolution
 TSPAN   = 0:T/resol:T;        % Time span [s]
-
-%%
-% Tire (default)
-
-TireModel = TirePacejka();
 
 %%
 % Vehicle
@@ -40,6 +35,14 @@ System.muy      = 0.8;
 System.deltaf   = 20*pi/180;
 System.Fxf      = 0;
 System.Fxr      = @VelControl; % To keep longitudinal speed.
+
+%%
+% Tire (default)
+g = 9.81;
+FzF = System.mF0 * g;       % Vertical load @ F [N]
+FzR = System.mR0 * g;       % Vertical load @ R [N]
+camber = 0;
+TireModel = TirePacejka();
 
 %% Simulation
 %
@@ -89,7 +92,7 @@ figure(5)
 hold on ; grid on ; box on
 plot(TSPAN,ALPHAT)
 xlabel('time [s]')
-ylabel('Vehicle slip angle [rad/s]')
+ylabel('Vehicle slip angle [rad]')
 
 figure(6)
 hold on ; grid on ; box on
@@ -115,13 +118,17 @@ YY = YC + R*sin(angulo);
 hold on
 plot(XX,YY,'k')
 
-g.Animation();
+% g.Animation();
 % g.Animation('html/SkidPadSimple');       % Uncomment to save animation gif
 
 %%
 % Maneuver radius
 
-disp(num2str(R))
+% disp(num2str(R))
+fprintf('turning radius[m]: %f\n', R);
+fprintf('steady beta nonlinear mode [rad]: %f\n', mean(ALPHAT(end-10:end)));
+fprintf('steady yaw rate nonlinear mode [rad/s]: %f\n', mean(dPSI(end-10:end)));
+ss_simulation;
 
 %% See Also
 %
