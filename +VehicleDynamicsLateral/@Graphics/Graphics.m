@@ -514,9 +514,9 @@ classdef Graphics
             % right top] Property - TightInset (read only)
             tight = [1.3 1.3 0.2 0.2];
             PosAxX  = figWidth - tight(1) - tight(3);     % Width of the axes (axes position x)
-            XLim    = [min(XT)-20 max(XT)+10];              % Limits of x
+            XLim    = [min(XT)-5 max(XT)+5];              % Limits of x
             rangeX  = XLim(2) - XLim(1);                  % Range of x
-            YLim    = [min(YT)-10 max(YT)+10];              % Limits of y
+            YLim    = [min(YT)-5 max(YT)+5];              % Limits of y
             rangeY  = YLim(2) - YLim(1);                  % Range of y
             PosAxY  = ScaleXY*PosAxX*rangeY/rangeX;         % Height of the axes (axes position y) - Equivalent to axis
 

@@ -6,9 +6,8 @@
 %
 %% Code start
 %
-
 clear ; close all ; clc;
-
+addpath('/home/uisee/Desktop/uisee/octave/Vehicle-Dynamics-Lateral');
 import VehicleDynamicsLateral.*
 
 %% Model and parameters
@@ -32,7 +31,8 @@ System.nF       = 2;
 System.nR       = 2;
 System.wT       = 2;
 System.muy      = 0.8;
-System.deltaf   = 20*pi/180;
+System.deltaf   = 20*pi/180 * ones(size(TSPAN));
+System.deltaf(1:11) = 0;
 System.Fxf      = 0;
 System.Fxr      = @VelControl; % To keep longitudinal speed.
 
@@ -104,7 +104,7 @@ ylabel('Yaw rate [rad/s]')
 % Frame and animation
 
 g = Graphics(simulator);
-g.TractorColor = 'c';
+g.TractorColor = 'y';
 
 g.Frame();
 
@@ -116,7 +116,7 @@ XX = XC + R*cos(angulo);
 YY = YC + R*sin(angulo);
 
 hold on
-plot(XX,YY,'k')
+plot(XX,YY,'k', 'linewidth', 2);
 
 % g.Animation();
 % g.Animation('html/SkidPadSimple');       % Uncomment to save animation gif
@@ -127,8 +127,14 @@ plot(XX,YY,'k')
 % disp(num2str(R))
 fprintf('turning radius[m]: %f\n', R);
 fprintf('steady beta nonlinear mode [rad]: %f\n', mean(ALPHAT(end-10:end)));
-fprintf('steady yaw rate nonlinear mode [rad/s]: %f\n', mean(dPSI(end-10:end)));
+fprintf('steady yaw rate nonlinear mode [rad/s]: %f\n\n', mean(dPSI(end-10:end)));
 ss_simulation;
+figure(5);
+plot(t,y1(:,1),'r');
+legend('nonlinear\_model', 'linear\_model');
+figure(6);
+plot(t,y1(:,2),'r');
+legend('nonlinear\_model', 'linear\_model');
 
 %% See Also
 %
@@ -136,3 +142,19 @@ ss_simulation;
 % <../../SkidPadSimple4DOF/html/SkidPadSimple4DOF.html
 % SkidPad Simple 4DOF>
 %
+
+% params identify
+delta_omega = iddata(dPSI, U', T/resol);
+np = 2; % ARX模型分母阶数（对应极点）
+nz = 1; % ARX模型分子阶数（对应零点）
+Options = tfestOptions;                           
+Options.Display = 'on';     
+Options.SearchOption.MaxIter = 20;
+Options.SearchMethod = 'auto';
+tf_delta_omega = tfest(delta_omega, np, nz, Options);
+disp('辨识后的连续系统传递函数:');
+tf_delta_omega
+[omega_i, t] = lsim(tf_delta_omega, U, TSPAN);
+figure(6);
+plot(t, omega_i, 'k');
+legend('nonlinear\_model', 'linear\_model', 'linear\_model\_identify');
