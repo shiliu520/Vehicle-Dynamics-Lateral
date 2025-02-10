@@ -97,7 +97,6 @@ classdef VehicleSimpleNonlinear < VehicleDynamicsLateral.VehicleSimple
             % Characteristic curve
             FyF = nF * self.tire.Characteristic(ALPHAF, FzF/nF, muy);
             FyR = nR * self.tire.Characteristic(ALPHAR, FzR/nR, muy);
-            % [FyF/ ALPHAF, FyR / ALPHAR]
 
             % Equations of motion
             dx(1,1) = VT * cos(ALPHAT + PSI);
