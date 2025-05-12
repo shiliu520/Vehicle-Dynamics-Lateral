@@ -49,6 +49,38 @@ D = [D_lat; D_yaw; D_acc];
 
 sys2 = ss(A2,B2,C,D);
 [y2,t2,x2]=lsim(sys2,U,t);
+Am = zeros((length(t)-1)*2, 1);
+Bm = zeros((length(t)-1)*2, 2);
+for tk = 2: length(t)
+    vy_k1 = y2(tk, 1);
+    vy_k0 = y2(tk - 1, 1);
+    omega_k1 = y2(tk, 2);
+    omega_k0 = y2(tk - 1, 2);
+    dt = t2(tk) - t2(tk -1);
+    delta_k0 = U(tk-1);
+    delta_k1 = U(tk);
+    u_k1 = u;
+    u_k0 = u;
+    Am(2 * (tk-1) - 1) = vy_k1 - vy_k0 + u_k0 * omega_k0 * dt;
+    Am(2 * (tk-1)) = omega_k1 - omega_k0;
+    Bm(2 * (tk-1) - 1, 1) = dt * ((-a * omega_k0 - vy_k0)/(m * u_k0) + delta_k0 / m);
+    Bm(2 * (tk-1) - 1, 2) = dt * (b * omega_k0 - vy_k0)/(m * u_k0);
+    Bm(2 * (tk-1), 1) = dt * ((-a * vy_k0 - a^2 * omega_k0)/(Iz * u_k0) + a * delta_k0 / Iz);
+    Bm(2 * (tk-1), 2) = dt * (b * vy_k0 - b^2 * omega_k0)/(Iz * u_k0);
+end
+C_hat = pinv(Bm) * Am;
+% 初始化导数矩阵
+dx_dt = zeros(size(x2));
+% 对每个时间点计算导数
+for i = 1:length(t)
+    dx_dt(i,:) = sys2.A * x2(i,:)' + sys2.B * U(i)';
+end
+Am1 = dx_dt;
+Am1(:, 1) = dx_dt(:, 1) + u * y2(:, 2); 
+Bm1_ay = [(-a * y2(:, 2) - y2(:, 1))/(m * u) + U' / m, (b * y2(:, 2) - y2(:, 1))/(m * u)];
+Bm1_omega = [(-a * y2(:, 1) - a^2 * y2(:, 2))/(Iz * u) + a * U' / Iz, (b * y2(:, 1) - b^2 * y2(:, 2))/(Iz * u)];
+C_hat_ay = pinv(Bm1_ay) * Am1(:, 1);
+C_hat_omega = pinv(Bm1_omega) * Am1(:, 2);
 
 %% input: steer output: wr
 m_ = m * u * Iz;
@@ -139,3 +171,6 @@ if plot_res == 1
     xlabel('time (sec)')
     ylabel('Lat. Accel.(m/sec^2)')
 end
+
+% filename = 'omega_ss.csv';
+% csvwrite(filename, y1(:,2));
